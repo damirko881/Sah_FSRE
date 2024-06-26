@@ -4,20 +4,20 @@ import queue
 
 class Utils:
     def get_mouse_event(self):
-        # get coordinates of the mouse
+        # dohvati koordinate misa
         position = pygame.mouse.get_pos()
         
-        # return left click status and mouse coordinates
+        # povratak lijevog klika i koordinata misa
         return position
 
     def left_click_event(self):
-        # store mouse buttons
+        # spremi gumbove misa
         mouse_btn = pygame.mouse.get_pressed()
-        # create flag to check for left click event
+        # napravi zastavicu za lijevi klik misa
         left_click = False
 
         if mouse_btn[0]: #and e.button == 1:
-            # change left click flag
+            # promijena satanja zastavice lijevog klika
             left_click = True
 
         return left_click

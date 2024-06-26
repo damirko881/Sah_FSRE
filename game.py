@@ -7,81 +7,81 @@ from utils import Utils
 
 class Game:
     def __init__(self):
-        # screen dimensions
+        # dimenzija ekrana
         screen_width = 640
         screen_height = 750
-        # flag to know if game menu has been showed
+        # zastavica da znamo jel prikazan menu igre
         self.menu_showed = False
-        # flag to set game loop
+        # zastavica za postavljanje petlje igre
         self.running = True
-        # base folder for program resources
+        # osnovna mapa za programske resurse
         self.resources = "res"
  
-        # initialize game window
+        # inicijalizirati prozor igre
         pygame.display.init()
-        # initialize font for text
+        # inicijalizirati font za tekst
         pygame.font.init()
 
-        # create game window
+        # napravi prozor igre
         self.screen = pygame.display.set_mode([screen_width, screen_height])
 
-        # title of window
+        # naslov prozora
         window_title = "Šah"
-        # set window caption
+        # postavka naslova prozora
         pygame.display.set_caption(window_title)
 
-        # get location of game icon
+        # lokacije ikone igre
         icon_src = os.path.join(self.resources, "chess_icon.png")
-        # load game icon
+        # ucitavanje ikone igre
         icon = pygame.image.load(icon_src)
-        # set game icon
+        # postavka ikone igre
         pygame.display.set_icon(icon)
-        # update display
+        # azuriraj prikaz
         pygame.display.flip()
-        # set game clock
+        # namjesti sat igre
         self.clock = pygame.time.Clock()
 
 
     def start_game(self):
         """Function containing main game loop""" 
-        # chess board offset
+        # offset sahovske ploce
         self.board_offset_x = 0
         self.board_offset_y = 50
         self.board_dimensions = (self.board_offset_x, self.board_offset_y)
         
-        # get location of chess board image
+        # lokacija slike sahovske ploce
         board_src = os.path.join(self.resources, "board.png")
         # load the chess board image
         self.board_img = pygame.image.load(board_src).convert()
 
-        # get the width of a chess board square
+        # sirina kvadrata sahovske ploce
         square_length = self.board_img.get_rect().width // 8
 
-        # initialize list that stores all places to put chess pieces on the board
+        # inicijalizirati popis koji pohranjuje sva mjesta za postavljanje šahovskih figura na ploču
         self.board_locations = []
 
-        # calculate coordinates of the each square on the board
+        # izracunaj koordinate svakog polja na ploci
         for x in range(0, 8):
             self.board_locations.append([])
             for y in range(0, 8):
                 self.board_locations[x].append([self.board_offset_x+(x*square_length), 
                                                 self.board_offset_y+(y*square_length)])
 
-        # get location of image containing the chess pieces
+        # lokacija slike koja ima figura
         pieces_src = os.path.join(self.resources, "pieces.png")
-        # create class object that handles the gameplay logic
+        # stvoriti objekt klase koji upravlja logikom igranja
         self.chess = Chess(self.screen, pieces_src, self.board_locations, square_length)
 
-        # game loop
+        # petlja igre
         while self.running:
             self.clock.tick(5)
-            # poll events
+            # anketni događaji
             for event in pygame.event.get():
-                # get keys pressed
+                # dohvati pritisnute tipke
                 key_pressed = pygame.key.get_pressed()
-                # check if the game has been closed by the user
+                # provijeri jeli igricu zatvorio korisnik
                 if event.type == pygame.QUIT or key_pressed[K_ESCAPE]:
-                    # set flag to break out of the game loop
+                    # zastavice da se izadje iz petlje igre
                     self.running = False
                 elif key_pressed[K_SPACE]:
                     self.chess.reset()
@@ -97,149 +97,147 @@ class Game:
             
             
 
-            # for testing mechanics of the game
             #self.game()
             #self.declare_winner(winner)
 
-            # update display
+            # azuriraj prikaz
             pygame.display.flip()
-            # update events
+            # azuriraj dogadjaje
             pygame.event.pump()
 
-        # call method to stop pygame
+        # poziv metode da se zaustavi pygame
         pygame.quit()
     
 
     def menu(self):
         """method to show game menu"""
-        # background color
+        # boja pozadine
         bg_color = (255, 255, 255)
-        # set background color
+        # namjesti pozadinu boje
         self.screen.fill(bg_color)
-        # black color
+        # crna boja
         black_color = (0, 0, 0)
-        # coordinates for "Play" button
+        # koordinate za gumb "igraj"
         start_btn = pygame.Rect(270, 300, 100, 50)
-        # show play button
+        # prikazi gumb "igraj"
         pygame.draw.rect(self.screen, black_color, start_btn)
 
-        # white color
+        # bijela boja
         white_color = (255, 255, 255)
-        # create fonts for texts
+        # napravi font za tekst
         big_font = pygame.font.SysFont("Times", 50, bold=True)
         small_font = pygame.font.SysFont("Times", 20)
-        # create text to be shown on the game menu
+        # prikaz teksta na pocetnoj stranici igre
         welcome_text = big_font.render("Šah", False, black_color)
         created_by = small_font.render("Napravili: David, Josip i Damir", True, black_color)
         start_btn_label = small_font.render("Igraj", True, white_color)
         
-        # show welcome text
+        # prikazi tekst dobrodoslice
         self.screen.blit(welcome_text, 
                       ((self.screen.get_width() - welcome_text.get_width()) // 2, 
                       150))
-        # show credit text
+        # prikaz teksta na kraju
         self.screen.blit(created_by, 
                       ((self.screen.get_width() - created_by.get_width()) // 2, 
                       self.screen.get_height() - created_by.get_height() - 100))
-        # show text on the Play button
+        # prikaz teksta na gumbu "igraj"
         self.screen.blit(start_btn_label, 
                       ((start_btn.x + (start_btn.width - start_btn_label.get_width()) // 2, 
                       start_btn.y + (start_btn.height - start_btn_label.get_height()) // 2)))
 
-        # get pressed keys
+        # dohvati pritisnute tipke
         key_pressed = pygame.key.get_pressed()
-        # 
         util = Utils()
 
-        # check if left mouse button was clicked
+        # provijeti jeli lijeva tipka misa pritisnuta
         if util.left_click_event():
-            # call function to get mouse event
+            # poziv funkcije za dobijanje odgadjaja misa
             mouse_coords = util.get_mouse_event()
 
-            # check if "Play" button was clicked
+            # provijeri ako je gumb "igraj" pritisnut
             if start_btn.collidepoint(mouse_coords[0], mouse_coords[1]):
-                # change button behavior as it is hovered
+                # promijena gumba pri prelasku misa preko njega
                 pygame.draw.rect(self.screen, white_color, start_btn, 3)
                 
-                # change menu flag
+                # promijen zastavice menija
                 self.menu_showed = True
-            # check if enter or return key was pressed
+            # provijerra ako je tipka "enter" pritisnuta
             elif key_pressed[K_RETURN]:
                 self.menu_showed = True
 
 
     def game(self):
-        # background color
+        # boja pozadine
         color = (0,0,0)
-        # set backgound color
+        # namjesti boju pozadine
         self.screen.fill(color)
         
-        # show the chess board
+        # prikaz ploce saha
         self.screen.blit(self.board_img, self.board_dimensions)
 
-        # call self.chess. something
+        # poziv self.chess.***
         self.chess.play_turn()
-        # draw pieces on the chess board
+        # nacrtaj figure na ploci saha
         self.chess.draw_pieces()
 
 
     def declare_winner(self, winner):
-        # background color
+        # boja pozadine
         bg_color = (255, 255, 255)
-        # set background color
+        # namjestanje boje pozadine
         self.screen.fill(bg_color)
-        # black color
+        # crna boja
         black_color = (0, 0, 0)
-        # coordinates for play again button
+        # koordinate za gumb "igraj ponovo"
         reset_btn = pygame.Rect(250, 300, 140, 50)
-        # show reset button
+        # pokazi gumb za "reset"
         pygame.draw.rect(self.screen, black_color, reset_btn)
 
-        # white color
+        # bijela boja
         white_color = (255, 255, 255)
-        # create fonts for texts
+        # cnapravi font za tekst
         big_font = pygame.font.SysFont("times", 50)
         small_font = pygame.font.SysFont("times", 20)
 
-        # text to show winner
+        # tekst za prikaz pobijednika
         text = winner + " je pobijedio!" 
         winner_text = big_font.render(text, False, black_color)
 
-        # create text to be shown on the reset button
+        # prikzi tekst na gumbu "reset"
         reset_label = "Igraj ponovo"
         reset_btn_label = small_font.render(reset_label, True, white_color)
 
-        # show winner text
+        # tekst pobijednika
         self.screen.blit(winner_text, 
                       ((self.screen.get_width() - winner_text.get_width()) // 2, 
                       150))
         
-        # show text on the reset button
+        # tekst na gumbu "reset"
         self.screen.blit(reset_btn_label, 
                       ((reset_btn.x + (reset_btn.width - reset_btn_label.get_width()) // 2, 
                       reset_btn.y + (reset_btn.height - reset_btn_label.get_height()) // 2)))
 
-        # get pressed keys
+        # dohvati pritsnute tipke
         key_pressed = pygame.key.get_pressed()
         # 
         util = Utils()
 
-        # check if left mouse button was clicked
+        # provijeri ako je lijevi gumb misa kliknut
         if util.left_click_event():
-            # call function to get mouse event
+            # poziv funkcije za dogadjaj misa
             mouse_coords = util.get_mouse_event()
 
-            # check if reset button was clicked
+            # provijeri ako je gumb "reset pritisnut"
             if reset_btn.collidepoint(mouse_coords[0], mouse_coords[1]):
-                # change button behavior as it is hovered
+                # promijena gumba ako je predjeno misem preko njega
                 pygame.draw.rect(self.screen, white_color, reset_btn, 3)
                 
-                # change menu flag
+                # promijena zastavice menija
                 self.menu_showed = False
-            # check if enter or return key was pressed
+            # provijeri ako je gumb "enter" pritisnut
             elif key_pressed[K_RETURN]:
                 self.menu_showed = False
-            # reset game
+            # resetiraj igru
             self.chess.reset()
-            # clear winner
+            # ocisti pobijednika
             self.chess.winner = ""
