@@ -1,31 +1,29 @@
 import pygame
-from pygame.locals import *
-import random
 
 from piece import Piece
 from utils import Utils
 
-import time
 
 class Chess(object):
     def __init__(self, screen, pieces_src, square_coords, square_length):
-        # povrsina prikaza
+        # površina za prikazivanje
         self.screen = screen
-        # stvoriti objekt klase za prikaz šahovskih figura na ploči
+        # kreiraj objekt klase za prikazivanje šahovskih figura na tabli
         self.chess_pieces = Piece(pieces_src, cols=6, rows=2)
-        # pohraniti koordinate polja šahovske ploče
+        # čuvanje koordinate polja šahovske table
         self.board_locations = square_coords
-        # duljina stranice kvadrata šahovske ploče
+        # dužina stranice polja šahovske table
         self.square_length = square_length
-        # rječnik za praćenje poteza igrača
+        # rječnik za praćenje redosljeda igrača
         self.turn = {"black": 0,
                      "white": 0}
 
-        # popis koji sadrži moguće poteze za odabranu figuru
+        # lista koja sadži moguće poteze za odabranu figuru
         self.moves = []
+        #
         self.utils = Utils()
 
-        # mapiranje naziva komada u indeks popisa koji sadrži koordinate komada na spritesheetu
+        # mapiranje imena figura na indekse liste koja sadrži koordinate figura na sprite sheetu-u
         self.pieces = {
             "white_pawn":   5,
             "white_knight": 3,
@@ -41,24 +39,26 @@ class Chess(object):
             "black_queen":  7
         }
 
-        # popis koji sadrži snimljene dijelove
+        # lista koja sadrži zarobljene figure
         self.captured = []
+        #
         self.winner = ""
 
         self.reset()
     
     def reset(self):
-        # liste poteza
+        # očisti liste poteza
         self.moves = []
 
-        # red igraca
+        # slučajno određivanje redosljeda igrača
         x = 0
         if(x == 1):
             self.turn["black"] = 1
         elif(x == 0):
             self.turn["white"] = 1
 
-        # dvodimenzionalni rječnik koji sadrži detalje o svakoj lokaciji ploče
+        # Dvodimenzionalni rječnik koji sadrži detalje o svakom polju na ploči
+        # format pohrane je [piece_name, currently_selected, x_y_coordinate]
         self.piece_location = {}
         x = 0
         for i in range(97, 105):
@@ -66,13 +66,14 @@ class Chess(object):
             y = 0
             self.piece_location[chr(i)] = {}
             while a>0:
+                # [piece name, currently selected, board coordinates]
                 self.piece_location[chr(i)][a] = ["", False, [x,y]]
                 a = a - 1
                 y = y + 1
             x = x + 1
 
-        # reset table
-        for i in range(97, 105):
+        # Resetiranje ploče
+        for i in range(97, 105): #ASSCI vrijednost 'a' do 'h'
             x = 8
             while x>0:
                 if(x==8):
@@ -108,49 +109,49 @@ class Chess(object):
     def play_turn(self):
         # bijela boja
         white_color = (255, 255, 255)
-        # napravi fontove za text
+        # kreiranje fontova za tekstove
         small_font = pygame.font.SysFont("comicsansms", 20)
-        # text za prikaz na pocetnoj stranici
+        # kreiranje teksta koji će se prikazati na igračevom meniju
         if self.turn["black"]:
             turn_text = small_font.render("Igra: Crni", True, white_color)
         elif self.turn["white"]:
             turn_text = small_font.render("Igra: Bijeli", True, white_color)
         
-        # tekst dobrodoslice
+        # prikazivanje teksta dobrodošlice
         self.screen.blit(turn_text, 
                       ((self.screen.get_width() - turn_text.get_width()) // 2,
                       10))
         
-        # red crnog igraca 
+        # dopusti igraču s crnim figurama da igra
         if(self.turn["black"]):
             self.move_piece("black")
-        # red bijelog igraca
+        # dopusti igraču s bjelim figurama da igra
         elif(self.turn["white"]):
             self.move_piece("white")
 
-    # method to draw pieces on the chess board
+    # metoda za crtanje figura na šahovskoj ploči
     def draw_pieces(self):
         transparent_green = (0,194,39,170)
         transparent_blue = (28,21,212,170)
 
-        # create a transparent surface
+        # kreiranje transparenten površine
         surface = pygame.Surface((self.square_length, self.square_length), pygame.SRCALPHA)
         surface.fill(transparent_green)
 
         surface1 = pygame.Surface((self.square_length, self.square_length), pygame.SRCALPHA)
         surface1.fill(transparent_blue)
 
-        # loop to change background color of selected piece
+        # petlja za promjenu boje pozadine odabrane figure
         for val in self.piece_location.values():
             for value in val.values() :
-                # name of the piece in the current location
+                # ime figure na trenutnoj lokaciji
                 piece_name = value[0]
-                # x, y coordinates of the current piece
+                # x, y koordinate trenutne figure
                 piece_coord_x, piece_coord_y = value[2]
 
-                # change background color of piece if it is selected
+                # promjena boje pozadine figure ako je odabrano
                 if value[1] and len(value[0]) > 5:
-                    # if the piece selected is a black piece
+                    # ako je odabrana crna figura
                     if value[0][:5] == "black":
                         self.screen.blit(surface, self.board_locations[piece_coord_x][piece_coord_y])
                         if len(self.moves) > 0:
@@ -159,7 +160,7 @@ class Chess(object):
                                 y_coord = move[1]
                                 if x_coord >= 0 and y_coord >= 0 and x_coord < 8 and y_coord < 8:
                                     self.screen.blit(surface, self.board_locations[x_coord][y_coord])
-                    # if the piece selected is a white piece
+                    # ako je odabrana bijela figura
                     elif value[0][:5] == "white":
                         self.screen.blit(surface1, self.board_locations[piece_coord_x][piece_coord_y])
                         if len(self.moves) > 0:
@@ -169,59 +170,59 @@ class Chess(object):
                                 if x_coord >= 0 and y_coord >= 0 and x_coord < 8 and y_coord < 8:
                                     self.screen.blit(surface1, self.board_locations[x_coord][y_coord])
         
-        # draw all chess pieces
+        # crtanje svih figura na šahovskoj ploči
         for val in self.piece_location.values():
             for value in val.values() :
-                # name of the piece in the current location
+                # ime figure na trenutnoj lokaciji
                 piece_name = value[0]
-                # x, y coordinates of the current piece
+                # x, y koordinate trenutne figure
                 piece_coord_x, piece_coord_y = value[2]
-                # check if there is a piece at the square
+                # provjeri da li postoji figura na kvadratu
                 if(len(value[0]) > 1):
-                    # draw piece on the board
+                    # nacrtaj figuru na ploči
                     self.chess_pieces.draw(self.screen, piece_name, 
                                             self.board_locations[piece_coord_x][piece_coord_y])
 
 
-    # method to find the possible moves of the selected piece
+    # metoda za pronalaženje mogućih poteza odabrane figure
     def possible_moves(self, piece_name, piece_coord):
-        # list to store possible moves of the selected piece
+        # lista za pohranu mjesta za postavljanje figure
         positions = []
-        # find the possible locations to put a piece
+        # pronađi moguća mjesta za postavljanje figure
         if len(piece_name) > 0:
-            # get x, y coordinate
+            # dobij x, y koordinatu
             x_coord, y_coord = piece_coord
-            # calculate moves for bishop
+            # izračunaj poteze za lovca
             if piece_name[6:] == "bishop":
                 positions = self.diagonal_moves(positions, piece_name, piece_coord)
             
-            # calculate moves for pawn
+            #  izračunaj poteze za pijuna
             elif piece_name[6:] == "pawn":
-                # convert list index to dictionary key
+                # pretvori indeks liste u ključ rječnika
                 columnChar = chr(97 + x_coord)
                 rowNo = 8 - y_coord
 
-                # calculate moves for white pawn
+                # izračunaj poteze za crnog pijuna
                 if piece_name == "black_pawn":
                     if y_coord + 1 < 8:
-                        # get row in front of black pawn
+                        # dobij redak ispred crnog pijuna
                         rowNo = rowNo - 1
                         front_piece = self.piece_location[columnChar][rowNo][0]
                 
-                        # pawns cannot move when blocked by another another pawn
+                        # pijuni ne mogu potezati kada ih blokira drugi pijun
                         if(front_piece[6:] != "pawn"):
                             positions.append([x_coord, y_coord+1])
-                            # black pawns can move two positions ahead for first move
+                            # crni pijuni mogu potezati dva polja unaprijed za prvi potez
                             if y_coord < 2:
                                 positions.append([x_coord, y_coord+2])
 
                         # EM PASSANT
-                        # diagonal to the left
+                        # dijagonalno lijevo
                         if x_coord - 1 >= 0 and y_coord + 1 < 8:
                             x = x_coord - 1
                             y = y_coord + 1
                             
-                            # convert list index to dictionary key
+                            # pretvori indeks liste u ključ rječnika
                             columnChar = chr(97 + x)
                             rowNo = 8 - y
                             to_capture = self.piece_location[columnChar][rowNo]
@@ -229,12 +230,12 @@ class Chess(object):
                             if(to_capture[0][:5] == "white"):
                                 positions.append([x, y])
                         
-                        # diagonal to the right
+                        # dijagonalno desno
                         if x_coord + 1 < 8  and y_coord + 1 < 8:
                             x = x_coord + 1
                             y = y_coord + 1
 
-                            # convert list index to dictionary key
+                            # pretvori indeks liste u ključ rječnika
                             columnChar = chr(97 + x)
                             rowNo = 8 - y
                             to_capture = self.piece_location[columnChar][rowNo]
@@ -242,27 +243,27 @@ class Chess(object):
                             if(to_capture[0][:5] == "white"):
                                 positions.append([x, y])
                         
-                # calculate moves for white pawn
+                # izračunaj poteze za bijelog pijuna
                 elif piece_name == "white_pawn":
                     if y_coord - 1 >= 0:
-                        # get row in front of black pawn
+                        # dobij redak ispred bijelog pijuna
                         rowNo = rowNo + 1
                         front_piece = self.piece_location[columnChar][rowNo][0]
 
-                        # pawns cannot move when blocked by another another pawn
+                        # pijuni ne mogu potezati kada ih blokira drugi pijun
                         if(front_piece[6:] != "pawn"):
                             positions.append([x_coord, y_coord-1])
-                            # black pawns can move two positions ahead for first move
+                            # bijeli pijuni mogu potezati dva polja unaprijed za prvi potez
                             if y_coord > 5:
                                 positions.append([x_coord, y_coord-2])
 
                         # EM PASSANT
-                        # diagonal to the left
+                        # dijagonalno lijevo
                         if x_coord - 1 >= 0 and y_coord - 1 >= 0:
                             x = x_coord - 1
                             y = y_coord - 1
                             
-                            # convert list index to dictionary key
+                            #pretvori indeks liste u ključ rječnika
                             columnChar = chr(97 + x)
                             rowNo = 8 - y
                             to_capture = self.piece_location[columnChar][rowNo]
@@ -271,12 +272,12 @@ class Chess(object):
                                 positions.append([x, y])
 
                             
-                        # diagonal to the right
+                        # dijagonalno desno
                         if x_coord + 1 < 8  and y_coord - 1 >= 0:
                             x = x_coord + 1
                             y = y_coord - 1
 
-                            # convert list index to dictionary key
+                            # pretvori indeks liste u ključ rječnika
                             columnChar = chr(97 + x)
                             rowNo = 8 - y
                             to_capture = self.piece_location[columnChar][rowNo]
@@ -285,124 +286,124 @@ class Chess(object):
                                 positions.append([x, y])
 
 
-            # calculate moves for rook
+            # izračunaj poteze za topa
             elif piece_name[6:] == "rook":
-                # find linear moves
+                #pronađi linearne poteze
                 positions = self.linear_moves(positions, piece_name, piece_coord)
 
-            # calculate moves for knight
+            #izračunaj poteze za konja
             elif piece_name[6:] == "knight":
-                # left positions
+                #lijevi potezi
                 if(x_coord - 2) >= 0:
                     if(y_coord - 1) >= 0:
                         positions.append([x_coord-2, y_coord-1])
                     if(y_coord + 1) < 8:
                         positions.append([x_coord-2, y_coord+1])
-                # top positions
+                # gornji potezi
                 if(y_coord - 2) >= 0:
                     if(x_coord - 1) >= 0:
                         positions.append([x_coord-1, y_coord-2])
                     if(x_coord + 1) < 8:
                         positions.append([x_coord+1, y_coord-2])
-                # right positions
+                # desni potezi
                 if(x_coord + 2) < 8:
                     if(y_coord - 1) >= 0:
                         positions.append([x_coord+2, y_coord-1])
                     if(y_coord + 1) < 8:
                         positions.append([x_coord+2, y_coord+1])
-                # bottom positions
+                # donji potezi
                 if(y_coord + 2) < 8:
                     if(x_coord - 1) >= 0:
                         positions.append([x_coord-1, y_coord+2])
                     if(x_coord + 1) < 8:
                         positions.append([x_coord+1, y_coord+2])
 
-            # calculate movs for king
+            #  izračunaj poteze za kralja
             elif piece_name[6:] == "king":
                 if(y_coord - 1) >= 0:
-                    # top spot
+                    #  gornje mjesto
                     positions.append([x_coord, y_coord-1])
 
                 if(y_coord + 1) < 8:
-                    # bottom spot
+                    # donje mjesto
                     positions.append([x_coord, y_coord+1])
 
                 if(x_coord - 1) >= 0:
-                    # left spot
+                    # lijevo mjesto
                     positions.append([x_coord-1, y_coord])
-                    # top left spot
+                    # gornje lijevo mjesto
                     if(y_coord - 1) >= 0:
                         positions.append([x_coord-1, y_coord-1])
-                    # bottom left spot
+                    # donje lijevo mjesto
                     if(y_coord + 1) < 8:
                         positions.append([x_coord-1, y_coord+1])
                     
                 if(x_coord + 1) < 8:
-                    # right spot
+                    # desno mjesto
                     positions.append([x_coord+1, y_coord])
-                    # top right spot
+                    # gornje desno mjesto
                     if(y_coord - 1) >= 0:
                         positions.append([x_coord+1, y_coord-1])
-                    # bottom right spot
+                    # donje desno mjesto
                     if(y_coord + 1) < 8:
                         positions.append([x_coord+1, y_coord+1])
                 
-            # calculate movs for queen
+            # izračunaj poteze za kraljicu
             elif piece_name[6:] == "queen":
-                # find diagonal positions
+                # pronađi dijagonalne pozicije
                 positions = self.diagonal_moves(positions, piece_name, piece_coord)
 
-                # find linear moves
+                # pronađi linearne poteze
                 positions = self.linear_moves(positions, piece_name, piece_coord)
 
-            # list of positions to be removed
+            # lista pozicija koje treba ukloniti
             to_remove = []
 
-            # remove positions that overlap other pieces of the current player
+            # ukloni pozicije koje se preklapaju s drugim figurama trenutnog igrača
             for pos in positions:
                 x, y = pos
 
-                # convert list index to dictionary key
+                # pretvori indeks liste u ključ rječnika
                 columnChar = chr(97 + x)
                 rowNo = 8 - y
 
-                # find the pieces to remove
+                # pronađi figure za uklanjanje
                 des_piece_name = self.piece_location[columnChar][rowNo][0]
                 if(des_piece_name[:5] == piece_name[:5]):
                     to_remove.append(pos)
 
-            # remove position from positions list
+            # ukloni poziciju iz liste pozicija
             for i in to_remove:
                 positions.remove(i)
 
-        # return list containing possible moves for the selected piece
+        # vrati listu koja sadrži moguće poteze za odabranu figuru
         return positions
 
 
     def move_piece(self, turn):
-        # get the coordinates of the square selected on the board
+        # dohvati koordinate odabranog kvadrata na ploči
         square = self.get_selected_square()
 
-        # if a square was selected
+        # ako je kvadrat odabran
         if square:
-            # get name of piece on the selected square
+            # dohvati ime figure na odabranom kvadratu
             piece_name = square[0]
-            # color of piece on the selected square
+            # boja figure na odabranom kvadratu
             piece_color = piece_name[:5]
-            # board column character
+            # slovo stupca na ploči
             columnChar = square[1]
-            # board row number
+            # redni broj retka na ploči
             rowNo = square[2]
 
-            # get x, y coordinates
+            # dohvati x, y koordinate
             x, y = self.piece_location[columnChar][rowNo][2]
 
-            # if there's a piece on the selected square
+            # ako postoji figura na odabranom kvadratu
             if(len(piece_name) > 0) and (piece_color == turn):
-                # find possible moves for thr piece
+                # pronađi moguće poteze za figuru
                 self.moves = self.possible_moves(piece_name, [x,y])
 
-            # checkmate mechanism
+            #  mehanizam šaha
             p = self.piece_location[columnChar][rowNo]
 
             for i in self.moves:
@@ -412,24 +413,24 @@ class Chess(object):
                     else:
                         self.capture_piece(turn, [columnChar, rowNo], [x,y])
 
-            # only the player with the turn gets to play
+            # osamo igrač s rednim redkom može igrati
             if(piece_color == turn):
-                # change selection flag from all other pieces
+                # promijeni oznaku odabira za sve druge figure
                 for k in self.piece_location.keys():
                     for key in self.piece_location[k].keys():
                         self.piece_location[k][key][1] = False
 
-                # change selection flag of the selected piece
+                # promijeni oznaku odabira za odabranu figuru
                 self.piece_location[columnChar][rowNo][1] = True
                 
             
     def get_selected_square(self):
-        # dobiji lijevi dogadjaj
+        # get left event
         left_click = self.utils.left_click_event()
 
-        # ako postoji događaj misa
+        # if there's a mouse event
         if left_click:
-            # dohvati dogadjaj misa
+            # get mouse event
             mouse_event = self.utils.get_mouse_event()
 
             for i in range(len(self.board_locations)):
@@ -439,22 +440,24 @@ class Chess(object):
                     collision = rect.collidepoint(mouse_event[0], mouse_event[1])
                     if collision:
                         selected = [rect.x, rect.y]
-                        # pronađite x, y koordinate odabranog kvadrata
+                        # find x, y coordinates the selected square
                         for k in range(len(self.board_locations)):
+                            #
                             try:
                                 l = None
                                 l = self.board_locations[k].index(selected)
                                 if l != None:
-                                    #poništi boju svih odabranih komada
+                                    #reset color of all selected pieces
                                     for val in self.piece_location.values():
                                         for value in val.values() :
+                                            # [piece name, currently selected, board coordinates]
                                             if not value[1]:
                                                 value[1] = False
 
-                                    # dobiti znak stupca i broj retka šahovske figure
+                                    # get column character and row number of the chess piece
                                     columnChar = chr(97 + k)
                                     rowNo = 8 - l
-                                    # dohvati ime
+                                    # get the name of the 
                                     piece_name = self.piece_location[columnChar][rowNo][0]
                                     
                                     return [piece_name, columnChar, rowNo]
@@ -465,10 +468,10 @@ class Chess(object):
 
 
     def capture_piece(self, turn, chess_board_coord, piece_coord):
-        # dobiti x, y koordinate odredišnog komada
+        # get x, y coordinate of the destination piece
         x, y = piece_coord
 
-        # dobiti koordinate šahovske ploče
+        # get chess board coordinate
         columnChar, rowNo = chess_board_coord
 
         p = self.piece_location[columnChar][rowNo]
@@ -480,9 +483,9 @@ class Chess(object):
             self.winner = "Bijeli"
             print("Bijeli je pobijedio")
 
-        # dodajte snimljeni komad na popis
+        # add the captured piece to list
         self.captured.append(p)
-        # premjestiti izvorni dio na odredište
+        # move source piece to its destination
         self.validate_move(piece_coord)
 
 
@@ -495,18 +498,18 @@ class Chess(object):
                 board_piece = self.piece_location[k][key]
 
                 if board_piece[1]:
-                    # poništite odabir izvornog dijela
+                    # unselect the source piece
                     self.piece_location[k][key][1] = False
-                    # dobiti naziv izvornog djela
+                    # get the name of the source piece
                     piece_name = self.piece_location[k][key][0]
-                    # premjestiti izvorni dio na odredišni komad
+                    # move the source piece to the destination piece
                     self.piece_location[desColChar][desRowNo][0] = piece_name
                     
                     src_name = self.piece_location[k][key][0]
-                    # uklonite izvorni dio s njegove trenutne pozicije
+                    # remove source piece from its current position
                     self.piece_location[k][key][0] = ""
 
-                    # promijena reda
+                    # change turn
                     if(self.turn["black"]):
                         self.turn["black"] = 0
                         self.turn["white"] = 1
@@ -519,11 +522,11 @@ class Chess(object):
                     print("{} moved from {} to {}".format(src_name,  src_location, des_location))
 
 
-    # pomocna funkcija za pronalazak diagonalnih mjesta
+    # helper function to find diagonal moves
     def diagonal_moves(self, positions, piece_name, piece_coord):
         # reset x and y coordinate values
         x, y = piece_coord
-        # pronadji gornja lijeva dijagonalna mjesta
+        # find top left diagonal spots
         while(True):
             x = x - 1
             y = y - 1
@@ -532,18 +535,18 @@ class Chess(object):
             else:
                 positions.append([x,y])
 
-            # pretvoriti indeks popisa u ključ rječnika
+            # convert list index to dictionary key
             columnChar = chr(97 + x)
             rowNo = 8 - y
             p = self.piece_location[columnChar][rowNo]
 
-            # prwstani traziti moguce poteze ako su blokirani
+            # stop finding possible moves if blocked by a piece
             if len(p[0]) > 0 and piece_name[:5] != p[:5]:
                 break
 
         # reset x and y coordinate values
         x, y = piece_coord
-        # pronadji donja desna dijagonalna mjesta
+        # find bottom right diagonal spots
         while(True):
             x = x + 1
             y = y + 1
@@ -552,18 +555,18 @@ class Chess(object):
             else:
                 positions.append([x,y])
 
-            # pretvoriti indeks popisa u ključ rječnika
+            # convert list index to dictionary key
             columnChar = chr(97 + x)
             rowNo = 8 - y
             p = self.piece_location[columnChar][rowNo]
 
-            # prestani traziti poteze ako su blokirani 
+            # stop finding possible moves if blocked by a piece
             if len(p[0]) > 0 and piece_name[:5] != p[:5]:
                 break
 
-        # reset x y koordinatnih vreijednosti
+        # reset x and y coordinate values
         x, y = piece_coord
-        # pronadji donje lijeve dijagonalna mjesta
+        # find bottom left diagonal spots
         while(True):
             x = x - 1
             y = y + 1
@@ -572,18 +575,18 @@ class Chess(object):
             else:
                 positions.append([x,y])
 
-            # pretvoriti indeks popisa u ključ rječnika
+            # convert list index to dictionary key
             columnChar = chr(97 + x)
             rowNo = 8 - y
             p = self.piece_location[columnChar][rowNo]
 
-            # prestani traziti poteze ako su blokirani
+            # stop finding possible moves if blocked by a piece
             if len(p[0]) > 0 and piece_name[:5] != p[:5]:
                 break
 
-        # reset x i y vrijednosti koordinata
+        # reset x and y coordinate values
         x, y = piece_coord
-        # pronadji gornje desne dijagonalna mjesta
+        # find top right diagonal spots
         while(True):
             x = x + 1
             y = y - 1
@@ -592,82 +595,82 @@ class Chess(object):
             else:
                 positions.append([x,y])
 
-            # pretvoriti indeks popisa u ključ rječnika
+            # convert list index to dictionary key
             columnChar = chr(97 + x)
             rowNo = 8 - y
             p = self.piece_location[columnChar][rowNo]
 
-            # prestani traziti pokrete ako su blokirani
+            # stop finding possible moves if blocked by a piece
             if len(p[0]) > 0 and piece_name[:5] != p[:5]:
                 break
 
         return positions
     
 
-    # pomoćna funkcija za pronalaženje vodoravnih i okomitih pomaka
+    # helper function to find horizontal and vertical moves
     def linear_moves(self, positions, piece_name, piece_coord):
-        # reset x,y vrijednosti koordinata
+        # reset x, y coordniate value
         x, y = piece_coord
-        # horizontalni potezi u lijevo
+        # horizontal moves to the left
         while(x > 0):
             x = x - 1
             positions.append([x,y])
 
-            # pretvoriti indeks popisa u ključ rječnika
+            # convert list index to dictionary key
             columnChar = chr(97 + x)
             rowNo = 8 - y
             p = self.piece_location[columnChar][rowNo]
 
-            # prestani traziti moguce pozive ako su blokirani
+            # stop finding possible moves if blocked by a piece
             if len(p[0]) > 0 and piece_name[:5] != p[:5]:
                 break
                     
 
-        # reset x,y vrijednosti koordinate
+        # reset x, y coordniate value
         x, y = piece_coord
-        # horizontalni potezi u desno
+        # horizontal moves to the right
         while(x < 7):
             x = x + 1
             positions.append([x,y])
 
-            # pretvoriti indeks popisa u ključ rječnika
+            # convert list index to dictionary key
             columnChar = chr(97 + x)
             rowNo = 8 - y
             p = self.piece_location[columnChar][rowNo]
 
-            # prestani traziti mougce pozive ako su svi zablokirani
+            # stop finding possible moves if blocked by a piece
             if len(p[0]) > 0 and piece_name[:5] != p[:5]:
                 break    
 
-        # reset x,y vrijednosti koordinata
+        # reset x, y coordniate value
         x, y = piece_coord
-        # okomiti potezi prema gore
+        # vertical moves upwards
         while(y > 0):
             y = y - 1
             positions.append([x,y])
 
-            # pretvoriti indeks popisa u ključ rječnika
+            # convert list index to dictionary key
             columnChar = chr(97 + x)
             rowNo = 8 - y
             p = self.piece_location[columnChar][rowNo]
 
-            # prestani trazit moguce poteze ako su svi potezi blokirani
+            # stop finding possible moves if blocked by a piece
             if len(p[0]) > 0 and piece_name[:5] != p[:5]:
                 break
 
-        # reset x, y vrjednosti koordinata
+        # reset x, y coordniate value
         x, y = piece_coord
-        # okomiti potez prema dolje
+        # vertical moves downwards
         while(y < 7):
             y = y + 1
             positions.append([x,y])
 
-            # pretvoriti indeks popisa u kljuc rjecnika
+            # convert list index to dictionary key
             columnChar = chr(97 + x)
             rowNo = 8 - y
             p = self.piece_location[columnChar][rowNo]
 
-            # pronadji moguce poteze ako su blokirani
+            # stop finding possible moves if blocked by a piece
             if len(p[0]) > 0 and piece_name[:5] != p[:5]:
                 break
 
